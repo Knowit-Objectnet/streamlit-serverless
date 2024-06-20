@@ -10,7 +10,8 @@ from aws_cdk import (
     aws_ecs as ecs,
     aws_cloudfront as cloudfront,
     aws_cloudfront_origins as origins,
-    aws_elasticloadbalancingv2 as elbv2
+    aws_elasticloadbalancingv2 as elbv2,
+    aws_secretsmanager as sm
 )
 
 from aws_cdk.aws_ecr_assets import DockerImageAsset
@@ -31,7 +32,7 @@ class FrontendStack(Stack):
         # The code that defines your stack goes here
         # Build Docker image
         imageAsset = DockerImageAsset(self, "FrontendStreamlitImage",
-            directory=("streamlit_serverless_app/streamlit_sample/")
+            directory=("cvassist_app/cvassist/")
         )
 
         # create app execute role
@@ -62,6 +63,10 @@ class FrontendStack(Stack):
         )
         ecs_cluster = ecs.Cluster(self, 'StreamlitAppCluster', 
                                   vpc=vpc)
+         # Fetch secret from Secrets Manager
+        cvpartner_api_key_secret = sm.Secret.from_secret_name_v2(
+            self, "CvPartnerApiKeySecret", "cvassist"
+        )
         fargate_service = ecs_patterns.ApplicationLoadBalancedFargateService(self, "StreamlitAppService",
                         cluster=ecs_cluster,
                         runtime_platform = ecs.RuntimePlatform(
@@ -71,6 +76,11 @@ class FrontendStack(Stack):
                             image=ecs.ContainerImage.from_docker_image_asset(imageAsset),
                             container_port=8501,
                             task_role=app_execute_role,
+                            secrets={
+                              "CVPARTNER_API_KEY": ecs.Secret.from_secrets_manager(
+                                cvpartner_api_key_secret, "CVPARTNER_API_KEY"
+                                )
+                            },
                         ), 
                         task_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS),
                         public_load_balancer=True,

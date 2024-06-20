@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import aws_cdk as cdk
 
-from streamlit_serverless_app.frontend_stack import FrontendStack
+from cvassist_app.frontend_stack import FrontendStack
 
 app = cdk.App()
 
-APP_PREFIX = "StreamlitServerlessApp"
+APP_PREFIX = "cvassist"
 
 app_env_vars = {
     "STREAMLIT_SERVER_PORT": "8501"

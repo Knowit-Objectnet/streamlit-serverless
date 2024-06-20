@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 
 # Streamlit configuration
 st.title("Streamlit Serverless example with ECS Fargate")
